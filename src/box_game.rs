@@ -1,12 +1,12 @@
 extern crate freetype as ft;
 
-use ft::Library;
+//use ft::Library;
 use ggrs::{Frame, GGRSRequest, GameInput, GameState, GameStateCell, NULL_FRAME};
-use graphics::{Context, Graphics, ImageSize};
-use opengl_graphics::{GlGraphics, Texture, TextureSettings};
-use piston::input::RenderArgs;
+//use graphics::{Context, Graphics, ImageSize};
+//use opengl_graphics::{GlGraphics, Texture, TextureSettings};
+//use piston::input::RenderArgs;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+//use std::path::PathBuf;
 
 const FPS: u64 = 60;
 const NUM_PLAYERS: usize = 2;
@@ -44,6 +44,7 @@ fn fletcher16(data: &[u8]) -> u16 {
     (sum2 << 8) | sum1
 }
 
+/* 
 fn glyphs(face: &mut ft::Face, text: &str) -> Vec<(Texture, [f64; 2])> {
     let mut x = 10;
     let mut y = 0;
@@ -83,21 +84,32 @@ where
         Image::new_color(color::WHITE).draw(texture, &c.draw_state, c.transform.trans(x, y), gl);
     }
 }
-
+*/
 pub struct BoxGame {
     game_state: BoxGameState,
     pub key_states: [bool; 4],
-    font: PathBuf,
+    //font: PathBuf,
     last_checksum: (Frame, u64),
     periodic_checksum: (Frame, u64),
 }
 
 impl BoxGame {
+    /* 
     pub fn new(font: PathBuf) -> Self {
         Self {
             game_state: BoxGameState::new(),
             key_states: [false; 4],
             font,
+            last_checksum: (NULL_FRAME, 0),
+            periodic_checksum: (NULL_FRAME, 0),
+        }
+    }
+    */
+
+    pub fn new() -> Self {
+        Self {
+            game_state: BoxGameState::new(),
+            key_states: [false; 4],
             last_checksum: (NULL_FRAME, 0),
             periodic_checksum: (NULL_FRAME, 0),
         }
@@ -200,6 +212,7 @@ impl BoxGame {
         }
     }
 
+    /*
     pub fn render(&mut self, gl: &mut GlGraphics, freetype: &Library, args: &RenderArgs) {
         use graphics::*;
 
@@ -237,6 +250,7 @@ impl BoxGame {
             }
         });
     }
+    */
 
     #[allow(dead_code)]
     pub fn local_input(&self) -> Vec<u8> {
