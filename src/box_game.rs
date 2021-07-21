@@ -44,6 +44,7 @@ fn fletcher16(data: &[u8]) -> u16 {
     (sum2 << 8) | sum1
 }
 
+/* 
 fn glyphs(face: &mut ft::Face, text: &str) -> Vec<(Texture, [f64; 2])> {
     let mut x = 10;
     let mut y = 0;
@@ -83,7 +84,7 @@ where
         Image::new_color(color::WHITE).draw(texture, &c.draw_state, c.transform.trans(x, y), gl);
     }
 }
-
+*/
 pub struct BoxGame {
     game_state: BoxGameState,
     pub key_states: [bool; 4],
@@ -200,6 +201,7 @@ impl BoxGame {
         }
     }
 
+    /* 
     pub fn render(&mut self, gl: &mut GlGraphics, freetype: &Library, args: &RenderArgs) {
         use graphics::*;
 
@@ -237,7 +239,8 @@ impl BoxGame {
             }
         });
     }
-
+    */
+    
     #[allow(dead_code)]
     pub fn local_input(&self) -> Vec<u8> {
         // Create a set of pressed Keys.
