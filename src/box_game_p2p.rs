@@ -2,12 +2,6 @@ extern crate freetype as ft;
 
 use ggrs::{GGRSEvent, PlayerHandle, PlayerType, SessionState};
 use macroquad::prelude::*;
-// use glutin_window::GlutinWindow as Window;
-//use opengl_graphics::{GlGraphics, OpenGL};
-// use piston::event_loop::{EventSettings, Events};
-// use piston::input::{RenderEvent, UpdateEvent};
-// use piston::window::WindowSettings;
-// use piston::{Button, EventLoop, IdleEvent, Key, PressEvent, ReleaseEvent};
 use std::env;
 use std::net::SocketAddr;
 
@@ -15,9 +9,6 @@ use std::net::SocketAddr;
 const FPS_INV: f32 = 1. / 60.;
 const NUM_PLAYERS: usize = 2;
 const INPUT_SIZE: usize = std::mem::size_of::<u8>();
-
-const WINDOW_HEIGHT: u32 = 800;
-const WINDOW_WIDTH: u32 = 600;
 
 mod box_game;
 
@@ -53,38 +44,14 @@ async fn main() {
     // start the GGRS session
     sess.start_session().unwrap();
 
-    // Change this to OpenGL::V2_1 if not working
-    //let opengl = OpenGL::V3_2;
-
-    // Create a Glutin window
-    /*
-    let mut window: Window = WindowSettings::new("Box Game", [WINDOW_WIDTH, WINDOW_HEIGHT])
-        .graphics_api(opengl)
-        .exit_on_esc(true)
-        .build()
-        .unwrap();
-
-    // load a font to render text
-    let assets = find_folder::Search::ParentsThenKids(3, 3)
-        .for_folder("assets")
-        .unwrap();
-    //let freetype = ft::Library::init().unwrap();
-    let font = assets.join("FiraSans-Regular.ttf");
-    */
-
     // Create a new box game
     let mut game = box_game::BoxGame::new();
-    // let mut gl = GlGraphics::new(opengl);
 
-    // event settings
-    /*
-    let mut event_settings = EventSettings::new();
-    event_settings.set_ups(FPS);
-    event_settings.set_max_fps(FPS);
-    let mut events = Events::new(event_settings);
+    // set render settings
+    let font = load_ttf_font("src/assets/FiraSans-Regular.ttf")
+        .await
+        .unwrap();
 
-    let mut frames_to_skip = 0;
-    */
     // event loop
     let mut remaining_time = 0.;
     loop {
@@ -122,72 +89,33 @@ async fn main() {
         game.key_states[2] = is_key_down(KeyCode::S);
         game.key_states[3] = is_key_down(KeyCode::D);
 
-        //render(&bodies, &colliders);
+        render(&game);
 
         next_frame().await
     }
-    /*
-        while let Some(e) = events.next(&mut window) {
-            // render
-            /*
-            if let Some(args) = e.render_args() {
-                game.render(&mut gl, &freetype, &args);
-            }
-            */
 
-            // game update
-            if let Some(_) = e.update_args() {
-                if frames_to_skip > 0 {
-                    frames_to_skip -= 1;
-                    println!("Skipping a frame: WaitRecommendation");
-                } else if sess.current_state() == SessionState::Running {
-                    // tell GGRS it is time to advance the frame and handle the requests
-                    let local_input = game.local_input();
+    fn render(game: &box_game::BoxGame)
+    {
+        clear_background(BLACK);
 
-                    match sess.advance_frame(local_handle, &local_input) {
-                        Ok(requests) => game.handle_requests(requests),
-                        Err(ggrs::GGRSError::PredictionThreshold) => {
-                            println!("Skipping a frame: PredictionThreshold")
-                        }
-                        Err(e) => return Err(Box::new(e)),
-                    }
+        let checksum_string = format!(
+            "Frame {}: Checksum {}",
+            game.last_checksum().0, game.last_checksum().1
+        );
+        let periodic_string = format!(
+            "Frame {}: Checksum {}",
+            game.periodic_checksum().0, game.periodic_checksum().1
+        );
 
-                    // handle GGRS events
-                    for event in sess.events() {
-                        if let GGRSEvent::WaitRecommendation { skip_frames } = event {
-                            frames_to_skip += skip_frames
-                        }
-                        println!("Event: {:?}", event);
-                    }
-                }
-            }
+        draw_text_ex(&checksum_string, 20.0, 20.0, TextParams::default());
+        draw_text_ex(&periodic_string, 20.0, 40.0, TextParams::default());
 
-            // idle
-            if let Some(_args) = e.idle_args() {
-                sess.poll_remote_clients();
-            }
+        // draw the player rectangles
+        for i in 0..NUM_PLAYERS {
+            let (x, y) = game.game_state().positions[i];
+            let rotation = game.game_state().rotations[i];
 
-            // update key state
-            if let Some(Button::Keyboard(key)) = e.press_args() {
-                match key {
-                    Key::W => game.key_states[0] = true,
-                    Key::A => game.key_states[1] = true,
-                    Key::S => game.key_states[2] = true,
-                    Key::D => game.key_states[3] = true,
-                    _ => (),
-                }
-            }
-
-            // update key state
-            if let Some(Button::Keyboard(key)) = e.release_args() {
-                match key {
-                    Key::W => game.key_states[0] = false,
-                    Key::A => game.key_states[1] = false,
-                    Key::S => game.key_states[2] = false,
-                    Key::D => game.key_states[3] = false,
-                    _ => (),
-                }
-            }
+            draw_rectangle(x, y, box_game::PLAYER_SIZE, box_game::PLAYER_SIZE, box_game::PLAYER_COLORS[i]);
         }
-    */
+    }
 }

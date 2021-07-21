@@ -1,10 +1,9 @@
 extern crate freetype as ft;
 
-//use ft::Library;
+use macroquad::prelude::*;
+use macroquad::window::*;
+
 use ggrs::{Frame, GGRSRequest, GameInput, GameState, GameStateCell, NULL_FRAME};
-//use graphics::{Context, Graphics, ImageSize};
-//use opengl_graphics::{GlGraphics, Texture, TextureSettings};
-//use piston::input::RenderArgs;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -12,24 +11,22 @@ const FPS: u64 = 60;
 const NUM_PLAYERS: usize = 2;
 const CHECKSUM_PERIOD: i32 = 100;
 
-const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
-const BLUE: [f32; 4] = [0.0, 0.35, 0.78, 1.0];
-const ORANGE: [f32; 4] = [0.78, 0.59, 0.2, 1.0];
-const PLAYER_COLORS: [[f32; 4]; 2] = [BLUE, ORANGE];
 
-const PLAYER_SIZE: f64 = 50.0;
-const WINDOW_HEIGHT: u32 = 800;
-const WINDOW_WIDTH: u32 = 600;
+pub const PLAYER_COLORS: [Color; 2] = [BLUE, ORANGE];
+
+pub const PLAYER_SIZE: f32 = 50.0;
+//const WINDOW_HEIGHT: u32 = 800;
+//const WINDOW_WIDTH: u32 = 600;
 
 const INPUT_UP: u8 = 1 << 0;
 const INPUT_DOWN: u8 = 1 << 1;
 const INPUT_LEFT: u8 = 1 << 2;
 const INPUT_RIGHT: u8 = 1 << 3;
 
-const MOVEMENT_SPEED: f64 = 15.0 / FPS as f64;
-const ROTATION_SPEED: f64 = 2.5 / FPS as f64;
-const MAX_SPEED: f64 = 7.0;
-const FRICTION: f64 = 0.98;
+const MOVEMENT_SPEED: f32 = 15.0 / FPS as f32;
+const ROTATION_SPEED: f32 = 2.5 / FPS as f32;
+const MAX_SPEED: f32 = 7.0;
+const FRICTION: f32 = 0.98;
 
 /// Computes the fletcher16 checksum, copied from wikipedia: <https://en.wikipedia.org/wiki/Fletcher%27s_checksum>
 fn fletcher16(data: &[u8]) -> u16 {
@@ -44,47 +41,6 @@ fn fletcher16(data: &[u8]) -> u16 {
     (sum2 << 8) | sum1
 }
 
-/* 
-fn glyphs(face: &mut ft::Face, text: &str) -> Vec<(Texture, [f64; 2])> {
-    let mut x = 10;
-    let mut y = 0;
-    let mut res = vec![];
-    for ch in text.chars() {
-        face.load_char(ch as usize, ft::face::LoadFlag::RENDER)
-            .unwrap();
-        let g = face.glyph();
-
-        let bitmap = g.bitmap();
-        let texture = Texture::from_memory_alpha(
-            bitmap.buffer(),
-            bitmap.width() as u32,
-            bitmap.rows() as u32,
-            &TextureSettings::new(),
-        )
-        .unwrap();
-        res.push((
-            texture,
-            [(x + g.bitmap_left()) as f64, (y - g.bitmap_top()) as f64],
-        ));
-
-        x += (g.advance().x >> 6) as i32;
-        y += (g.advance().y >> 6) as i32;
-    }
-    res
-}
-
-fn render_text<G, T>(glyphs: &[(T, [f64; 2])], c: &Context, gl: &mut G)
-where
-    G: Graphics<Texture = T>,
-    T: ImageSize,
-{
-    for &(ref texture, [x, y]) in glyphs {
-        use graphics::*;
-
-        Image::new_color(color::WHITE).draw(texture, &c.draw_state, c.transform.trans(x, y), gl);
-    }
-}
-*/
 pub struct BoxGame {
     game_state: BoxGameState,
     pub key_states: [bool; 4],
@@ -102,6 +58,18 @@ impl BoxGame {
             last_checksum: (NULL_FRAME, 0),
             periodic_checksum: (NULL_FRAME, 0),
         }
+    }
+
+    pub fn game_state(&self) -> &BoxGameState {
+        &self.game_state
+    }
+
+    pub fn last_checksum(&self) -> (i32, u64){
+        self.last_checksum
+    }
+
+    pub fn periodic_checksum(&self) -> (i32, u64){
+        self.periodic_checksum
     }
 
     pub fn handle_requests(&mut self, requests: Vec<GGRSRequest>) {
@@ -162,11 +130,11 @@ impl BoxGame {
             }
             // turn left
             if input & INPUT_LEFT != 0 && input & INPUT_RIGHT == 0 {
-                rot = (rot - ROTATION_SPEED).rem_euclid(2.0 * std::f64::consts::PI);
+                rot = (rot - ROTATION_SPEED).rem_euclid(2.0 * std::f32::consts::PI);
             }
             // turn right
             if input & INPUT_LEFT == 0 && input & INPUT_RIGHT != 0 {
-                rot = (rot + ROTATION_SPEED).rem_euclid(2.0 * std::f64::consts::PI);
+                rot = (rot + ROTATION_SPEED).rem_euclid(2.0 * std::f32::consts::PI);
             }
 
             // limit speed
@@ -182,9 +150,9 @@ impl BoxGame {
 
             //constrain boxes to canvas borders
             x = x.max(0.0);
-            x = x.min(WINDOW_WIDTH as f64);
+            x = x.min(screen_width());
             y = y.max(0.0);
-            y = y.min(WINDOW_HEIGHT as f64);
+            y = y.min(screen_width());
 
             self.game_state.positions[i] = (x, y);
             self.game_state.velocities[i] = (vel_x, vel_y);
@@ -201,7 +169,7 @@ impl BoxGame {
         }
     }
 
-    /* 
+    /*
     pub fn render(&mut self, gl: &mut GlGraphics, freetype: &Library, args: &RenderArgs) {
         use graphics::*;
 
@@ -266,11 +234,11 @@ impl BoxGame {
 
 // BoxGameState holds all relevant information about the game state
 #[derive(Serialize, Deserialize)]
-struct BoxGameState {
+pub struct BoxGameState {
     pub frame: i32,
-    pub positions: Vec<(f64, f64)>,
-    pub velocities: Vec<(f64, f64)>,
-    pub rotations: Vec<f64>,
+    pub positions: Vec<(f32, f32)>,
+    pub velocities: Vec<(f32, f32)>,
+    pub rotations: Vec<f32>,
 }
 
 impl BoxGameState {
@@ -279,9 +247,9 @@ impl BoxGameState {
         let mut velocities = Vec::new();
         let mut rotations = Vec::new();
         for i in 0..NUM_PLAYERS as i32 {
-            let x = WINDOW_WIDTH as i32 / 2 + (2 * i - 1) * (WINDOW_WIDTH as i32 / 4);
-            let y = WINDOW_HEIGHT as i32 / 2;
-            positions.push((x as f64, y as f64));
+            let x: f32 = screen_width()  / 2. + (2. * (i as f32) - 1.) * (screen_width() / 4.);
+            let y: f32 = screen_height()  / 2.;
+            positions.push((x, y));
             velocities.push((0.0, 0.0));
             rotations.push(0.0);
         }
