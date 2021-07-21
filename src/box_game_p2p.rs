@@ -36,20 +36,22 @@ async fn main() {
     let mut sess = ggrs::start_p2p_session(NUM_PLAYERS as u32, INPUT_SIZE, port).unwrap();
 
     // add players
-    sess.add_player(PlayerType::Local, local_handle);
-    sess.add_player(PlayerType::Remote(remote_addr), remote_handle);
+    sess.add_player(PlayerType::Local, local_handle).unwrap();
+    sess.add_player(PlayerType::Remote(remote_addr), remote_handle)
+        .unwrap();
 
     // optionally, add a spectator
     if args.len() > 4 {
         let spec_addr: SocketAddr = args[4].parse().unwrap();
-        sess.add_player(PlayerType::Spectator(spec_addr), 2);
+        sess.add_player(PlayerType::Spectator(spec_addr), 2)
+            .unwrap();
     }
 
     // set input delay for the local player
-    sess.set_frame_delay(2, local_handle);
+    sess.set_frame_delay(2, local_handle).unwrap();
 
     // start the GGRS session
-    sess.start_session();
+    sess.start_session().unwrap();
 
     // Change this to OpenGL::V2_1 if not working
     //let opengl = OpenGL::V3_2;
@@ -88,15 +90,17 @@ async fn main() {
     loop {
         remaining_time += get_frame_time();
         while remaining_time >= FPS_INV {
-            // tell GGRS it is time to advance the frame and handle the requests
-            let local_input = game.local_input();
+            if sess.current_state() == SessionState::Running {
+                // tell GGRS it is time to advance the frame and handle the requests
+                let local_input = game.local_input();
 
-            match sess.advance_frame(local_handle, &local_input) {
-                Ok(requests) => game.handle_requests(requests),
-                Err(ggrs::GGRSError::PredictionThreshold) => {
-                    println!("Skipping a frame: PredictionThreshold")
+                match sess.advance_frame(local_handle, &local_input) {
+                    Ok(requests) => game.handle_requests(requests),
+                    Err(ggrs::GGRSError::PredictionThreshold) => {
+                        println!("Skipping a frame: PredictionThreshold")
+                    }
+                    Err(e) => panic!("{}", e),
                 }
-                Err(e) => return (),
             }
 
             // handle GGRS events
@@ -109,7 +113,7 @@ async fn main() {
             remaining_time -= FPS_INV;
         }
 
-         // idle
+        // idle
         sess.poll_remote_clients();
 
         // update key state
@@ -122,68 +126,68 @@ async fn main() {
 
         next_frame().await
     }
-/* 
-    while let Some(e) = events.next(&mut window) {
-        // render
-        /*
-        if let Some(args) = e.render_args() {
-            game.render(&mut gl, &freetype, &args);
-        }
-        */
+    /*
+        while let Some(e) = events.next(&mut window) {
+            // render
+            /*
+            if let Some(args) = e.render_args() {
+                game.render(&mut gl, &freetype, &args);
+            }
+            */
 
-        // game update
-        if let Some(_) = e.update_args() {
-            if frames_to_skip > 0 {
-                frames_to_skip -= 1;
-                println!("Skipping a frame: WaitRecommendation");
-            } else if sess.current_state() == SessionState::Running {
-                // tell GGRS it is time to advance the frame and handle the requests
-                let local_input = game.local_input();
+            // game update
+            if let Some(_) = e.update_args() {
+                if frames_to_skip > 0 {
+                    frames_to_skip -= 1;
+                    println!("Skipping a frame: WaitRecommendation");
+                } else if sess.current_state() == SessionState::Running {
+                    // tell GGRS it is time to advance the frame and handle the requests
+                    let local_input = game.local_input();
 
-                match sess.advance_frame(local_handle, &local_input) {
-                    Ok(requests) => game.handle_requests(requests),
-                    Err(ggrs::GGRSError::PredictionThreshold) => {
-                        println!("Skipping a frame: PredictionThreshold")
+                    match sess.advance_frame(local_handle, &local_input) {
+                        Ok(requests) => game.handle_requests(requests),
+                        Err(ggrs::GGRSError::PredictionThreshold) => {
+                            println!("Skipping a frame: PredictionThreshold")
+                        }
+                        Err(e) => return Err(Box::new(e)),
                     }
-                    Err(e) => return Err(Box::new(e)),
-                }
 
-                // handle GGRS events
-                for event in sess.events() {
-                    if let GGRSEvent::WaitRecommendation { skip_frames } = event {
-                        frames_to_skip += skip_frames
+                    // handle GGRS events
+                    for event in sess.events() {
+                        if let GGRSEvent::WaitRecommendation { skip_frames } = event {
+                            frames_to_skip += skip_frames
+                        }
+                        println!("Event: {:?}", event);
                     }
-                    println!("Event: {:?}", event);
+                }
+            }
+
+            // idle
+            if let Some(_args) = e.idle_args() {
+                sess.poll_remote_clients();
+            }
+
+            // update key state
+            if let Some(Button::Keyboard(key)) = e.press_args() {
+                match key {
+                    Key::W => game.key_states[0] = true,
+                    Key::A => game.key_states[1] = true,
+                    Key::S => game.key_states[2] = true,
+                    Key::D => game.key_states[3] = true,
+                    _ => (),
+                }
+            }
+
+            // update key state
+            if let Some(Button::Keyboard(key)) = e.release_args() {
+                match key {
+                    Key::W => game.key_states[0] = false,
+                    Key::A => game.key_states[1] = false,
+                    Key::S => game.key_states[2] = false,
+                    Key::D => game.key_states[3] = false,
+                    _ => (),
                 }
             }
         }
-
-        // idle
-        if let Some(_args) = e.idle_args() {
-            sess.poll_remote_clients();
-        }
-
-        // update key state
-        if let Some(Button::Keyboard(key)) = e.press_args() {
-            match key {
-                Key::W => game.key_states[0] = true,
-                Key::A => game.key_states[1] = true,
-                Key::S => game.key_states[2] = true,
-                Key::D => game.key_states[3] = true,
-                _ => (),
-            }
-        }
-
-        // update key state
-        if let Some(Button::Keyboard(key)) = e.release_args() {
-            match key {
-                Key::W => game.key_states[0] = false,
-                Key::A => game.key_states[1] = false,
-                Key::S => game.key_states[2] = false,
-                Key::D => game.key_states[3] = false,
-                _ => (),
-            }
-        }
-    }
-*/
+    */
 }
