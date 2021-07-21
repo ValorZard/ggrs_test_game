@@ -1,11 +1,9 @@
 extern crate freetype as ft;
 
 use macroquad::prelude::*;
-use macroquad::window::*;
 
 use ggrs::{Frame, GGRSRequest, GameInput, GameState, GameStateCell, NULL_FRAME};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 const FPS: u64 = 60;
 const NUM_PLAYERS: usize = 2;
@@ -15,8 +13,6 @@ const CHECKSUM_PERIOD: i32 = 100;
 pub const PLAYER_COLORS: [Color; 2] = [BLUE, ORANGE];
 
 pub const PLAYER_SIZE: f32 = 50.0;
-//const WINDOW_HEIGHT: u32 = 800;
-//const WINDOW_WIDTH: u32 = 600;
 
 const INPUT_UP: u8 = 1 << 0;
 const INPUT_DOWN: u8 = 1 << 1;
@@ -168,46 +164,6 @@ impl BoxGame {
             self.periodic_checksum = (self.game_state.frame, checksum);
         }
     }
-
-    /*
-    pub fn render(&mut self, gl: &mut GlGraphics, freetype: &Library, args: &RenderArgs) {
-        use graphics::*;
-
-        let mut face = freetype.new_face(&self.font, 0).unwrap();
-        face.set_pixel_sizes(0, 40).unwrap();
-        let checksum_string = format!(
-            "Frame {}: Checksum {}",
-            self.last_checksum.0, self.last_checksum.1
-        );
-        let checksum_glyphs = glyphs(&mut face, &checksum_string);
-        let periodic_string = format!(
-            "Frame {}: Checksum {}",
-            self.periodic_checksum.0, self.periodic_checksum.1
-        );
-        let periodic_glyphs = glyphs(&mut face, &periodic_string);
-
-        gl.draw(args.viewport(), |c, gl| {
-            // Clear the screen.
-            clear(BLACK, gl);
-            render_text(&checksum_glyphs, &c.trans(0.0, 40.0), gl);
-            render_text(&periodic_glyphs, &c.trans(0.0, 80.0), gl);
-
-            // draw the player rectangles
-            for i in 0..NUM_PLAYERS {
-                let square = rectangle::square(0.0, 0.0, PLAYER_SIZE);
-                let (x, y) = self.game_state.positions[i];
-                let rotation = self.game_state.rotations[i];
-
-                let transform = c
-                    .transform
-                    .trans(x, y)
-                    .rot_rad(rotation)
-                    .trans(-PLAYER_SIZE / 2.0, -PLAYER_SIZE / 2.0);
-                rectangle(PLAYER_COLORS[i], square, transform, gl);
-            }
-        });
-    }
-    */
 
     #[allow(dead_code)]
     pub fn local_input(&self) -> Vec<u8> {
