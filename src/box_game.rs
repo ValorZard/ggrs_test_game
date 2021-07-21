@@ -1,10 +1,10 @@
 extern crate freetype as ft;
 
-use ft::Library;
+//use ft::Library;
 use ggrs::{Frame, GGRSRequest, GameInput, GameState, GameStateCell, NULL_FRAME};
-use graphics::{Context, Graphics, ImageSize};
-use opengl_graphics::{GlGraphics, Texture, TextureSettings};
-use piston::input::RenderArgs;
+//use graphics::{Context, Graphics, ImageSize};
+//use opengl_graphics::{GlGraphics, Texture, TextureSettings};
+//use piston::input::RenderArgs;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -88,17 +88,17 @@ where
 pub struct BoxGame {
     game_state: BoxGameState,
     pub key_states: [bool; 4],
-    font: PathBuf,
+    //font: PathBuf,
     last_checksum: (Frame, u64),
     periodic_checksum: (Frame, u64),
 }
 
 impl BoxGame {
-    pub fn new(font: PathBuf) -> Self {
+    pub fn new() -> Self {
         Self {
             game_state: BoxGameState::new(),
             key_states: [false; 4],
-            font,
+            //font,
             last_checksum: (NULL_FRAME, 0),
             periodic_checksum: (NULL_FRAME, 0),
         }
@@ -240,7 +240,7 @@ impl BoxGame {
         });
     }
     */
-    
+
     #[allow(dead_code)]
     pub fn local_input(&self) -> Vec<u8> {
         // Create a set of pressed Keys.
