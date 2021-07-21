@@ -16,3 +16,15 @@ pistoncore-glutin_window = "0.69.0"
 piston2d-opengl_graphics = "0.78.0"
 freetype-rs = "0.27.0"
 find_folder = "0.3.0"
+
+[dependencies.resphys]
+git = "https://github.com/ValorZard/Resphys-Fixed"
+
+# Examples
+[[example]]
+name = "box_game_p2p"
+path = "src/box_game_p2p.rs"
+
+[[example]]
+name = "box_game_spectator"
+path = "src/box_game_spectator.rs"

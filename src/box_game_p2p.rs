@@ -48,7 +48,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // start the GGRS session
     sess.start_session()?;
 
-    
     // Change this to OpenGL::V2_1 if not working
     let opengl = OpenGL::V3_2;
 
@@ -59,18 +58,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build()
         .unwrap();
 
-    /* 
     // load a font to render text
     let assets = find_folder::Search::ParentsThenKids(3, 3)
         .for_folder("assets")
         .unwrap();
     let freetype = ft::Library::init().unwrap();
     let font = assets.join("FiraSans-Regular.ttf");
-    */
 
     // Create a new box game
-    let mut game = box_game::BoxGame::new();
-    //let mut gl = GlGraphics::new(opengl);
+    let mut game = box_game::BoxGame::new(font);
+    let mut gl = GlGraphics::new(opengl);
 
     // event settings
     let mut event_settings = EventSettings::new();
@@ -83,9 +80,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // event loop
     while let Some(e) = events.next(&mut window) {
         // render
-        //if let Some(args) = e.render_args() {
-            //game.render(&mut gl, &freetype, &args);
-        //}
+        if let Some(args) = e.render_args() {
+            game.render(&mut gl, &freetype, &args);
+        }
 
         // game update
         if let Some(_) = e.update_args() {
